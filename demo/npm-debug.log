@@ -1,0 +1,26 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'c:\\Program Files\\nodejs\\node.exe',
+1 verbose cli   'c:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'run',
+1 verbose cli   './index.js' ]
+2 info using npm@2.15.8
+3 info using node@v4.4.7
+4 verbose stack Error: missing script: ./index.js
+4 verbose stack     at run (c:\Program Files\nodejs\node_modules\npm\lib\run-script.js:142:19)
+4 verbose stack     at c:\Program Files\nodejs\node_modules\npm\lib\run-script.js:58:5
+4 verbose stack     at c:\Program Files\nodejs\node_modules\npm\node_modules\read-package-json\read-json.js:356:5
+4 verbose stack     at checkBinReferences_ (c:\Program Files\nodejs\node_modules\npm\node_modules\read-package-json\read-json.js:320:45)
+4 verbose stack     at final (c:\Program Files\nodejs\node_modules\npm\node_modules\read-package-json\read-json.js:354:3)
+4 verbose stack     at then (c:\Program Files\nodejs\node_modules\npm\node_modules\read-package-json\read-json.js:124:5)
+4 verbose stack     at c:\Program Files\nodejs\node_modules\npm\node_modules\read-package-json\read-json.js:311:12
+4 verbose stack     at c:\Program Files\nodejs\node_modules\npm\node_modules\graceful-fs\graceful-fs.js:78:16
+4 verbose stack     at FSReqWrap.readFileAfterClose [as oncomplete] (fs.js:380:3)
+5 verbose cwd c:\git\ATM\demo
+6 error Windows_NT 6.1.7601
+7 error argv "c:\\Program Files\\nodejs\\node.exe" "c:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" "run" "./index.js"
+8 error node v4.4.7
+9 error npm  v2.15.8
+10 error missing script: ./index.js
+11 error If you need help, you may report this error at:
+11 error     <https://github.com/npm/npm/issues>
+12 verbose exit [ 1, true ]

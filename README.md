@@ -1,2 +1,80 @@
-# ATM
-Auto Track Module... 
+文档先行吧
+
+---
+
+[TOC]
+
+# Auto Track Module
+
+## ATM简介
+
+**ATM**是一个针对简单UI交互自动埋点的工具。受到小程序数据统计自定义分析管理界面的启发，而尝试实现的小工具模块。
+或者，与其说是一个工具模块，更像是一套**约定**。
+约定好统计代码、广告投放代码的数据对接格式，
+
+如果你也遇到过以下**痛点**，不妨尝试一下ATM：
+-  数据埋点、数据收集、数据上报代码与业务代码强耦合
+-  不同广告投放使用不同规则的数据收集代码，维护成本很大
+-  有时候统计代码或者广告代码js报错了，会导致网站炸了…… （面壁中……）
+
+当然毕竟作者是个菜鸟，代码写的不咋样，权当抛砖引玉
+
+## 不足之处
+- 对于复杂的交互，无法避免会嵌套一些业务耦合较高的埋点代码
+- ATM才刚起步，性能上，设计上可能存在各种神奇的缺陷…… 
+
+## 愿景
+- 对于简单UI交互的埋点，全局只需要一套独立的代码即可，避免埋点代码与业务代码的耦合
+- 愿景是数据收集、处理、上报都交给ATM和配置文件
+- 对于'不足之处1'，由于约定的存在，只需要在业务代码中编写收集数据的代码，数据处理和上报都交给ATM封装
+- 后期愿景是能做到像小程序数据统计自定义分析管理界面那样，无代码，简单填写几个参数，自动生成ATM统计代码
+
+# 开始使用ATM
+
+## 内部实现
+内部 @import 配置文件 （默认支持piwik, baidu, google ，其余自定义需要手动配置）
+function merge()
+CONFIG_VALIDATE_RULES
+CONFIG_REPORT_RULES
+CONFIG_PROCESS_RULES
+
+## 项目依赖
+外部 @import ATM  
+如果只需要自动埋点，则这个文件足矣
+
+## 项目使用
+- 全局变量 引用ATM 
+- AMD requirejs 引用
+- ES6 @import 引用
+
+
+``` javascript
+// 约定
+let options = {
+	trigger: 'click', // 触发事件名   
+    page: '*', // 触发事件的页面url,大小写不敏感，*表示全部页面
+    element: '#section-flow', // 触发事件的元素   
+    // validateRule: '', // 可空，校验数据方式，默认piwik
+    // processRule: '', // 可空，数据处理方式，默认piwik
+    // reportRule: '', // 可空，上报方式，默认piwik    
+}
+
+
+// 自动收集埋点
+ATM.autoCollectTrackData(data, options);
+
+// 主动收集
+fetch("https://www.example.com/api")
+	.then(data => {
+		ATM.emitCollectingTrackData(data, options)
+	})
+	.catch(err => console.error(err))
+```
+
+
+## API
+设置全局options （准备中……）
+
+``` javascript
+ATM.setOptions(options)
+``` 

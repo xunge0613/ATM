@@ -1,4 +1,6 @@
 文档先行吧
+github地址： https://github.com/xunge0613/ATM
+
 
 ---
 
@@ -39,17 +41,58 @@ CONFIG_REPORT_RULES
 CONFIG_PROCESS_RULES
 
 ## 项目依赖
-外部 @import ATM  
-如果只需要自动埋点，则这个文件足矣
+
+```vbscript-html
+<script type="text/javascript" src="/path/to/ATM.babel.min.js" ></script>
+```
+ 
 
 ## 项目使用
 - 全局变量 引用ATM 
-- AMD requirejs 引用
-- ES6 @import 引用
+- AMD requirejs 引用 （TBD 准备中……）
+- ES6 @import 引用  （TBD 准备中……）
 
+**强烈建议全局单独维护一份 ATM 埋点代码，实现业务与埋点代码解耦**
+```vbscript-html
+<script type="text/javascript" src="/path/to/auto-track-module.js"></script>
+```
+
+## Usage
+
+#### ATM.autoCollectTrackData(data, options)
+ 自动收集埋点数据
+##### data 参数说明
+| Name		|     Type |   Required   |   Description   |
+| :-: | :-:| :-: | :-: |
+| trigger	|   String |  false  |   默认为 options.trigger， 触发事件的描述   | 
+| page	|   String |  false  |   默认为 options.page， 触发事件的页面描述   | 
+| element	|   String |  false  |   默认为 options.element，触发事件的元素描述   | 
+| value	|   Number |  false  |   默认为1，触发事件统计计数   | 
+
+注:   此处data 可为空对象 {}，主要用于描述埋点事件说明
+
+
+##### options 参数说明
+| Name		|     Type |   Required   |   Description   |
+| :-: | :-:| :-: | :-: |
+| trigger	|   String |  *true*  |   触发事件名   | 
+| page	|   String |  *true*  |   触发事件的页面url,大小写不敏感，*表示全部页面   | 
+| element	|   String |  *true*  |   触发事件的元素   | 
+| value	|   Number |  false  |   默认为 1，触发事件统计计数   | 
+| validateRule	|   String  |  *true*  |   数据校验规则   | 
+| processRule	|   String |  *true*  |   数据处理规则   | 
+| reportRule	|   String |  *true*  |   数据上报规则   | 
+
+注: 此处options 不可为空对象 {}，需要根据options的参数进行埋点事件绑定
+
+##### 约定
+ 以**GA**为例，page 对应 category；trigger 对应 action ；element 对应 label ； value 对应 value
+ 
+##### 示例代码
 
 ``` javascript
 // 约定
+let data = {}
 let options = {
 	trigger: 'click', // 触发事件名   
     page: '*', // 触发事件的页面url,大小写不敏感，*表示全部页面
@@ -63,6 +106,51 @@ let options = {
 // 自动收集埋点
 ATM.autoCollectTrackData(data, options);
 
+```
+
+#### ATM.emitCollectingTrackData(data, options)
+主动收集数据
+##### data 参数说明
+| Name		|     Type |   Required   |   Description   |
+| :-: | :-:| :-: | :-: |
+| trigger	|   String |  false  |   默认为 options.trigger， 触发事件的描述   | 
+| page	|   String |  false  |   默认为 options.page， 触发事件的页面描述   | 
+| element	|   String |  false  |   默认为 options.element，触发事件的元素描述   | 
+| value	|   Number |  false  |   默认为1，触发事件统计计数   | 
+
+注:   此处data 可为空对象 {}，主要用于描述埋点事件说明
+
+
+##### options 参数说明
+| Name		|     Type |   Required   |   Description   |
+| :-: | :-:| :-: | :-: |
+| trigger	|   String |  *true*  |   触发事件名   | 
+| page	|   String |  *true*  |   触发事件的页面url,大小写不敏感，*表示全部页面   | 
+| element	|   String |  *true*  |   触发事件的元素   | 
+| value	|   Number |  false  |   默认为 1，触发事件统计计数   | 
+| validateRule	|   String  |  *true*  |   数据校验规则   | 
+| processRule	|   String |  *true*  |   数据处理规则   | 
+| reportRule	|   String |  *true*  |   数据上报规则   | 
+
+注: 此处options 不可为空对象 {}，需要根据options的参数进行埋点事件绑定
+
+##### 约定
+ 以**GA**为例，page 对应 category；trigger 对应 action ；element 对应 label ； value 对应 value
+
+##### 示例代码
+
+``` javascript
+// 约定
+let data = {}
+let options = {
+	trigger: 'click', // 触发事件名   
+    page: '*', // 触发事件的页面url,大小写不敏感，*表示全部页面
+    element: '#section-flow', // 触发事件的元素   
+    // validateRule: '', // 可空，校验数据方式，默认piwik
+    // processRule: '', // 可空，数据处理方式，默认piwik
+    // reportRule: '', // 可空，上报方式，默认piwik    
+}
+
 // 主动收集
 fetch("https://www.example.com/api")
 	.then(data => {
@@ -70,11 +158,21 @@ fetch("https://www.example.com/api")
 	})
 	.catch(err => console.error(err))
 ```
+#### ATM.setOptions(options)  （TBD 准备中……）
+设置全局options
 
-
-## API
-设置全局options （准备中……）
+##### 示例代码
 
 ``` javascript
 ATM.setOptions(options)
 ``` 
+
+# 参考
+
+GA 事件追踪 https://support.google.com/analytics/answer/1033068#Anatomy 
+
+piwik 事件追踪 https://piwik.org/docs/event-tracking/
+
+
+# 鸣谢
+> Inspired By & Special Thanks for https://mp.weixin.qq.com/debug/wxadoc/analysis/custom/

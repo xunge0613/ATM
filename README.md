@@ -33,12 +33,6 @@ github地址： https://github.com/xunge0613/ATM
 
 # 开始使用ATM
 
-## 内部实现
-内部 @import 配置文件 （默认支持piwik, baidu, google ，其余自定义需要手动配置）
-function merge()
-CONFIG_VALIDATE_RULES
-CONFIG_REPORT_RULES
-CONFIG_PROCESS_RULES
 
 ## 项目依赖
 
@@ -57,10 +51,11 @@ CONFIG_PROCESS_RULES
 <script type="text/javascript" src="/path/to/auto-track-module.js"></script>
 ```
 
-## Usage
+## API
 
 #### ATM.autoCollectTrackData(data, options)
  自动收集埋点数据
+
 ##### data 参数说明
 | Name		|     Type |   Required   |   Description   |
 | :-: | :-:| :-: | :-: |
@@ -94,7 +89,7 @@ CONFIG_PROCESS_RULES
 // 约定
 let data = {}
 let options = {
-	trigger: 'click', // 触发事件名   
+    trigger: 'click', // 触发事件名   
     page: '*', // 触发事件的页面url,大小写不敏感，*表示全部页面
     element: '#section-flow', // 触发事件的元素   
     // validateRule: '', // 可空，校验数据方式，默认piwik
@@ -104,35 +99,28 @@ let options = {
 
 
 // 自动收集埋点
-ATM.autoCollectTrackData(data, options);
+window.onLoad(function() {
+	ATM.autoCollectTrackData(data, options);
+})
+
 
 ```
 
 #### ATM.emitCollectingTrackData(data, options)
 主动收集数据
+ 对于复杂的交互，无法避免会嵌套一些业务耦合较高的埋点代码，可以使用 ATM.emitCollectingTrackData(data, options)
 ##### data 参数说明
 | Name		|     Type |   Required   |   Description   |
 | :-: | :-:| :-: | :-: |
-| trigger	|   String |  false  |   默认为 options.trigger， 触发事件的描述   | 
-| page	|   String |  false  |   默认为 options.page， 触发事件的页面描述   | 
-| element	|   String |  false  |   默认为 options.element，触发事件的元素描述   | 
-| value	|   Number |  false  |   默认为1，触发事件统计计数   | 
-
-注:   此处data 可为空对象 {}，主要用于描述埋点事件说明
-
-
+| DIY	|   String |  false  |   DIY   | 
+ 
 ##### options 参数说明
 | Name		|     Type |   Required   |   Description   |
 | :-: | :-:| :-: | :-: |
-| trigger	|   String |  *true*  |   触发事件名   | 
-| page	|   String |  *true*  |   触发事件的页面url,大小写不敏感，*表示全部页面   | 
-| element	|   String |  *true*  |   触发事件的元素   | 
-| value	|   Number |  false  |   默认为 1，触发事件统计计数   | 
-| validateRule	|   String  |  *true*  |   数据校验规则   | 
-| processRule	|   String |  *true*  |   数据处理规则   | 
-| reportRule	|   String |  *true*  |   数据上报规则   | 
+| DIY	|   String |  false  |   DIY   | 
 
-注: 此处options 不可为空对象 {}，需要根据options的参数进行埋点事件绑定
+
+注: 此处data, options 的参数由配置文件**约定**
 
 ##### 约定
  以**GA**为例，page 对应 category；trigger 对应 action ；element 对应 label ； value 对应 value
@@ -158,6 +146,164 @@ fetch("https://www.example.com/api")
 	})
 	.catch(err => console.error(err))
 ```
+
+## CONFIG
+### ATM_CONFIG
+ATM 全局配置，（默认支持piwik、 baidu、 google，其余自定义需要手动配置） 
+包含三个部分，是 ATM **约定**的核心构成 
+- CONFIG_VALIDATE_RULES 数据校验规则
+- CONFIG_PROCESS_RULES 数据处理规则
+- CONFIG_REPORT_RULES 数据上报规则
+
+#### ATM_CONFIG.VALIDATE_RULES
+##### 数据校验规则
+调用 ATM.autoCollectTrackData(data, options)， ATM.emitCollectingTrackData(data, options) **都会**根据对应规则进行校验
+1. 若**未匹配**到对应规则，则默认**不**进行数据校验
+2. 匹配到对应规则后
+ -  对于Object类型规则，使用默认验证方式，验证 requiredData 和 requiredOptions 两个数组内字段是否有值
+ -  对于Function类型规则，使用该自定义验证函数进行验证
+
+##### 配置说明
+| Name		|     Type |   Required   |   Description   |
+| :-: | :-:| :-: | :-: |
+| validateRule	|   Function/Object |  true  |   类型为Function，自定义验证规则；类型为Object，使用默认验证规则   | 
+##### 代码示例
+```javascript
+const ATM_CONFIG = {
+		/*
+            数据校验规则         
+        */
+		'VALIDATE_RULES': {
+			'piwik_emit': function(data,options) {
+				return true
+			},			
+            'piwik_auto': {
+            	requiredData: [], 
+            	requiredOptions: ['trigger','page', 'element']
+            },
+            'google_auto': {
+            	requiredData: [], 
+            	requiredOptions: ['trigger','page', 'element']
+            },
+            'baidu_auto': {
+            	requiredData: [], 
+            	requiredOptions: ['trigger','page', 'element']
+            },
+            'default': {
+            	requiredData: [], 
+            	requiredOptions: []
+            },
+        },
+	}
+}
+```
+#### ATM_CONFIG.PROCESS_RULES
+##### 数据处理规则
+用于将收集到的数据按照**约定**转换为可上报数据
+1. 若**未匹配**到对应规则，则默认**不**进行数据处理
+2. 匹配到对应规则后
+ -  对于 Array 类型规则，使用默认处理方式，**默认约定只允许从 option 赋值到 data **
+ -  对于 Function 类型规则，使用该自定义验证函数进行处理
+##### 配置说明
+| Name		|     Type |   Required   |   Description   |
+| :-: | :-:| :-: | :-: |
+| processRule	|   Function/Array |  true  |   类型为Function，自定义处理规则；类型为Array，使用默认处理规则   | 
+| processRule[].mergeDataName	|   String |  *true*  |   被赋值的data字段名   | 
+| processRule[].mergeOptionName	|   String |  false* |   提供赋值的option属性名   | 
+| processRule[].mergeOptionValue	|   String |  false* |   提供赋值的option属性值   | 
+
+*注： 
+- processRule[].mergeOptionName 与 processRule[].mergeOptionValue 两者之间必须有一个非空，优选使用 mergeOptionName 进行赋值
+- 默认情况下，经过 processRule 从 option 赋值到data 的优先级**低于**原先 data 中已赋值的优先级
+`即 data.page = data.page || options.page`
+
+
+##### 代码示例
+```javascript
+const ATM_CONFIG = {
+		/*
+            数据处理规则         
+        */
+		'PROCESS_RULES': {
+			'piwik_emit': function(data,options) {
+				return true
+			},			
+            'piwik_auto': [
+	           {
+		           mergeDataName: 'category',
+		           mergeOptionName: 'page'
+	           },		
+   	           {
+		           mergeDataName: 'category',
+		           mergeOptionName: 'page'
+	           },		
+   	           {
+		           mergeDataName: 'category',
+		           mergeOptionName: 'page'
+	           },		
+   	           {
+		           mergeDataName: 'category',
+		           mergeOptionName: 'page'
+	           },		
+			],
+            'default': {
+            	requiredData: [], 
+            	requiredOptions: []
+            },
+        },
+	}
+}
+```
+#### ATM_CONFIG.REPORT_RULES
+##### 数据上报规则
+调用 ATM.emitCollectingTrackData(data, options) **会**根据对应规则进行上报
+1. 若**未匹配**到对应规则，则默认**不**进行数据上报
+2. 匹配到对应规则后，使用规则进行上报
+
+##### 配置说明
+| Name		|     Type |   Required   |   Description   |
+| :-: | :-:| :-: | :-: |
+| reportRule	|   Function |  true  |   类型为Function，上报规则，默认参数 data,options | 
+
+##### 代码示例
+```javascript
+const ATM_CONFIG = {
+		/*
+            数据上报规则         
+        */
+		'REPORT_RULES': {			
+            'piwik_auto': function(data, options) {
+	            console.log("report piwik",data)
+                 //Piwik延时执行
+                let piwikTT = setInterval(function () {
+                    if (!(typeof Piwik === 'undefined')) {
+                        try {
+                            let atmTracker = Piwik.getTracker();
+                            if (data.value) {
+                                atmTracker.trackEvent(data.category, data.action, data.name, data.value);
+                            }
+                            else {
+                                atmTracker.trackEvent(data.category, data.action, data.name);
+                            }
+                        }
+                        catch (error) {
+                            //do nothing
+                            console.log("piwik 尚未加载");
+                        } finally {
+                            clearInterval(piwikTT);
+                        }
+                    }
+                }, 200);
+                return ;
+			},
+            'default': function(data, options) {
+	            return 
+            },
+        },
+	}
+}
+```
+
 #### ATM.setOptions(options)  （TBD 准备中……）
 设置全局options
 
@@ -167,12 +313,15 @@ fetch("https://www.example.com/api")
 ATM.setOptions(options)
 ``` 
 
+## 兼容性
+目测IE9+
+
 # 参考
 
 GA 事件追踪 https://support.google.com/analytics/answer/1033068#Anatomy 
-
 piwik 事件追踪 https://piwik.org/docs/event-tracking/
 
 
 # 鸣谢
 > Inspired By & Special Thanks for https://mp.weixin.qq.com/debug/wxadoc/analysis/custom/
+

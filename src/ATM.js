@@ -2,22 +2,21 @@
 //
 // Auto Track Module
 // 
-// v0.0.1
+// v0.0.2
 // URL: [url=https://github.com/xunge0613/ATM/]https://github.com/xunge0613/ATM[/url]
 //
 // Licensed under the MIT license:
 //        [url=http://www.opensource.org/licenses/mit-license.php]http://www.opensource.org/licenses/mit-license.php[/url]
 //
 //---------------------------------------------------------------------
-(function () {
+;(function () {
 	const ATM = {}
  
 	// CONFIG
 	// -----------------------------------------------
 	const ATM_CONFIG = {
 		/*
-            数据校验
-            参数若是
+            数据校验         
         */
 		'VALIDATE_RULES': {
 			'piwik_emit': function(data,options) {
@@ -27,7 +26,14 @@
 				requiredData: ['test'], 
             	requiredOptions: []
 			},
-
+			'baidu_auto': {
+				requiredData: [], 
+            	requiredOptions: ['trigger','page', 'element']
+			},
+			'google_auto': {
+				requiredData: [], 
+            	requiredOptions: ['trigger','page', 'element']
+			},
             'piwik_auto': {
             	requiredData: [], 
             	requiredOptions: ['trigger','page', 'element']
@@ -37,6 +43,65 @@
             	requiredOptions: []
             },
         },
+        /*
+			数据处理
+        */
+        'PROCESS_RULES': {
+			'piwik_emit': function(data,options) {
+				return true
+			},
+			'piwik_auto': [
+				{
+					mergeDataName: 'category',
+					mergeOptionName: 'page'
+				},
+				{
+					mergeDataName: 'action',
+					mergeOptionName: 'trigger'
+				},
+				{
+					mergeDataName: 'name',
+					mergeOptionName: 'element'
+				},
+				{
+					mergeDataName: 'value',
+					mergeOptionValue: 1
+				},								
+			]
+		},
+        /*
+			数据上报
+        */
+        'REPORT_RULES': {			
+            'piwik_auto': function(data, options) { 
+	            console.log("report piwik",data)
+                 //Piwik延时执行
+                let piwikTT = setInterval(function () {
+                    if (!(typeof Piwik === 'undefined')) {
+                        try {
+                            let atmTracker = Piwik.getTracker();
+                            if (data.value) {
+                                atmTracker.trackEvent(data.category, data.action, data.name, data.value);
+                            }
+                            else {
+                                atmTracker.trackEvent(data.category, data.action, data.name);
+                            }
+                        }
+                        catch (error) {
+                            //do nothing
+                            console.log("piwik 尚未加载");
+                        } finally {
+                            clearInterval(piwikTT);
+                        }
+                    }
+                }, 200);
+                return ;
+			},
+            'default': function(data, options) {
+	            return 
+            }, 
+        }, 
+	 
 	}
 
 	// RULES
@@ -215,7 +280,9 @@
 
 	// TBD
 	ATM.setOptions = function(options) {
-
+		console.log("setOptions:")
+		console.log("options: " + options)
+		console.log("ATM_CONFIG: " + ATM_CONFIG)	 
 	}
 
 
@@ -225,6 +292,6 @@
 
 	// 暴露全局 ATM
 	// this.ATM = ATM; babel 转换默认使用 use strict ， 立即执行函数中 this 指向 undefind
-	window.ATM = window.ATM || ATM 
+	window.ATM = ATM 
 
 })();

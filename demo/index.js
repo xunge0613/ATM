@@ -1,5 +1,6 @@
+// auto collect example 1
 ATM.autoCollectTrackData({
-	test3: 1
+	test3: 1 //  validate not passed
 },{
 	trigger: 'click',
 	page: '*',
@@ -7,7 +8,7 @@ ATM.autoCollectTrackData({
 	validateRule: 'test'
 })
 
-
+// auto collect example 2
 ATM.autoCollectTrackData({
 	test: 1
 },{
@@ -15,3 +16,4 @@ ATM.autoCollectTrackData({
 	page: '*',
 	element: '.js-test-class'
 })
+

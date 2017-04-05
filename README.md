@@ -1,6 +1,7 @@
 文档先行吧
 github地址： https://github.com/xunge0613/ATM
-demo: http://xuxun.me/lab/2017/ATM/demo/index.html
+
+demo: https://xuxun.me/lab/2017/ATM/demo/index.html
 
 ---
 

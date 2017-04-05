@@ -38,7 +38,11 @@
             	requiredData: [], 
             	requiredOptions: ['trigger','page', 'element']
             },
-            'default': {
+            'default_auto': {
+            	requiredData: [], 
+            	requiredOptions: ['trigger','page', 'element']
+            },
+            'default_emit': {
             	requiredData: [], 
             	requiredOptions: []
             },
@@ -48,7 +52,7 @@
         */
         'PROCESS_RULES': {
 			'piwik_emit': function(data,options) {
-				return true
+				return data
 			},
 			'piwik_auto': [
 				{
@@ -67,14 +71,37 @@
 					mergeDataName: 'value',
 					mergeOptionValue: 1
 				},								
-			]
+			],
+			'default_auto': [
+				{
+					mergeDataName: 'category',
+					mergeOptionName: 'page'
+				},
+				{
+					mergeDataName: 'action',
+					mergeOptionName: 'trigger'
+				},
+				{
+					mergeDataName: 'name',
+					mergeOptionName: 'element'
+				},
+				{
+					mergeDataName: 'value',
+					mergeOptionValue: 1
+				},								
+			],
+			'default_emit': [],
 		},
         /*
 			数据上报
         */
         'REPORT_RULES': {			
-            'piwik_auto': function(data, options) { 
-	            console.log("report piwik",data)
+            'default_emit': function(data, options) { 
+	            console.log("ATM report default_emit",data)                 
+                return ;
+			},
+            'default_auto': function(data, options) { 
+	            console.log("ATM report default_auto",data)
                  //Piwik延时执行
                 let piwikTT = setInterval(function () {
                     if (!(typeof Piwik === 'undefined')) {
@@ -97,9 +124,6 @@
                 }, 200);
                 return ;
 			},
-            'default': function(data, options) {
-	            return 
-            }, 
         }, 
 	 
 	}
@@ -115,10 +139,9 @@
 		let _validateStatus = true 
 
 		if(!ATM_CONFIG.VALIDATE_RULES[rule]) {
-			// 未找到rule, 默认不校验
-			// rule = 'default'
-			console.warn("ATM validateData: no matched validate rule, default return true")
-			return true
+			// 指定规则，若未找到rule, 认定校验失败		 
+			console.warn("ATM validateData: no matched validate rule, Please check your VALIDATE_RULES")
+			return false
 		}
 
 		if(typeof ATM_CONFIG.VALIDATE_RULES[rule] === 'function') {
@@ -142,17 +165,46 @@
 
 
 		console.warn("ATM validateData: Type unmatched Please check your ATM_CONFIG.VALIDATE_RULES ")
-		return true
+		return false
 	}
 
-	// 数据处理
-	function processData(rule, data, options) { 
+	// 数据预处理
+	function processData(rule = '', data = {} , options = {}) { 
+		if(!ATM_CONFIG.PROCESS_RULES[rule]) {
+			// 指定规则，若未找到rule, 认定处理失败		 
+			console.warn("ATM validateData: no matched validate rule, Please check your PROCESS_RULES")
+			return false
+		}	
 
+		if(typeof ATM_CONFIG.PROCESS_RULES[rule] === 'function') {
+			// 规则为函数，直接用该函数进行数据处理
+			return ATM_CONFIG.PROCESS_RULES[rule](data,options)
+
+		} else if (Object.prototype.toString.call(ATM_CONFIG.PROCESS_RULES[rule]) === '[object Array]') {
+			// 规则为数组，使用约定方式进行数据处理								 	
+			// mergeOptionName 优先级高于 mergeOptionValue
+			ATM_CONFIG.PROCESS_RULES[rule].forEach(function(rule) {				
+				if(typeof rule.mergeOptionValue !== 'undefined') {
+					data[rule.mergeDataName] = options[rule.mergeOptionValue]
+				}
+				if(typeof rule.mergeOptionName !== 'undefined') {
+					data[rule.mergeDataName] = options[rule.mergeOptionName]
+				}
+			})
+			return data 
+		}	
+		
 	}
 
 	// 数据上报
-	function reportData(rule, data, options) {
+	function reportData(rule = '', data = {}, options = {}) {				
+		if(!ATM_CONFIG.REPORT_RULES[rule]) {
+			// 指定规则，若未找到rule, 认定上报失败		 	 
+			console.warn("ATM validateData: no matched validate rule, Please check your REPORT_RULES")
+			return false
+		}
 
+		return ATM_CONFIG.REPORT_RULES[rule](data,options)		 
 	}
 
 	// API
@@ -181,25 +233,19 @@
 
         }
     */
-	ATM.autoCollectTrackData = function (data, options) {
-	    // 保证 data 是个对象
-	    if (typeof data !== "object" || !data) {
-	        data = {}
-	    }
+	ATM.autoCollectTrackData = function (data = {}, options = {}) {
+	  
+	    // 数据校验，处理，上报都可空，默认使用 default_auto 进行检验
+	    options.validateRule = options.validateRule || 'default_auto'
+	    options.processRule = options.processRule || 'default_auto'
+	    options.reportRule = options.reportRule || 'default_auto'
 
-	    // 保证事件绑定有效
-	    if (!options || !options.trigger || !options.page || !options.element) {
-	    	console.warn("ATM autoCollectTrackData: required options missed")
-	        return false
-	    } 
-
-	    // 数据校验
-	    if(options.validateRule && !validateData(options.validateRule, data, options)) {
+	    if(!validateData(options.validateRule, data, options)) {
 	    	console.warn("ATM autoCollectTrackData: validateRule NOT passed")
 	    	return false
 	    }
 
-	   	
+	   	// page === * 表示全部页面都监听
 	    if (options.page === "*") {
 	        options.page = window.location.href.toLowerCase();
 	    }
@@ -207,27 +253,30 @@
 	    var currenturl = window.location.href.toLowerCase();
 	    try {
 	        if (currenturl.indexOf(options.page) != -1) {
-	        	// default : Event Capture 默认捕获方式
-	        	let _nodeList = document.querySelectorAll(options.element)
+	        	if(typeof jQuery === 'undefined') {
+		        	// default : Event Capture 默认捕获方式
+		        	let _nodeList = document.querySelectorAll(options.element)
 
-	        	if(_nodeList) {
-	        		let _elements = Array.prototype.slice.call(_nodeList)
-	        		_elements.map(function(_element) {
-	        			_element.addEventListener(options.trigger,function() {
-		        		 	// ATM.emitCollectingTrackData(data,options)
-		        		 	console.log(this)
-		        		 	console.log('ATM.emitCollectingTrackData(data,options)')
-		        		 })
-	        		})
-	        		 
-	        	}
-	        	// 事件冒泡
-
-	        	// 如果存在jQuery 
-
-	            //$(options.element).on(options.trigger, data, function () {
-	            //    ahs.ATM.emitCollectingTrackData(data,options)
-	            //})
+		        	if(_nodeList) {
+		        		let _elements = Array.prototype.slice.call(_nodeList)
+		        		_elements.forEach(function(_element) {
+		        			_element.addEventListener(options.trigger,function() {			        		 	
+			        		 	console.log(this)
+			        		 	console.log('ATM.emitCollectingTrackData(data,options), native, Event Capture')
+			        		 	ATM.emitCollectingTrackData(data,options)
+			        		 })
+		        		})
+		        		 
+		        	}
+		        	// 如果异步加载，则使用事件冒泡委托代理
+	        	} else {
+	        		// 如果存在jQuery，可以解决兼容性问题
+		            $(options.element).on(options.trigger, data, function () {
+		                console.log(this)
+	        		 	console.log('ATM.emitCollectingTrackData(data,options) ,jQuery ,Event Capture')
+	        		 	ATM.emitCollectingTrackData(data,options)
+		            })
+	        	}	        		        	
 	        }                
 	    }
 	    catch (error) {
@@ -255,26 +304,60 @@
         if (!data && !options) {
             return false;
         }
-        options = options || { processType: 'default' }
-
-        // 默认使用Piwik处理数据
-        if (!options.processType) {
-            options.processType = 'default'
-        } 
-
-        // 默认使用Piwik上报
-        if (!options.reportType) {
-            options.reportType = 'default'
+        // options 为空时，认定为通过主动收集调用，填充默认 processRule, validateRule, reportRule
+        options = options || { 
+        	processRule: 'default_emit',
+        	validateRule: 'default_emit',
+        	reportRule: 'default_emit'
         }
 
-        console.log('emitCollectingTrackData', data, options)            
+        // 默认使用default_emit校验数据
+        if (!options.validateRule) {
+            options.validateRule = 'default_emit'
+        } 
+
+        // 默认使用default_emit处理数据
+        if (!options.processRule) {
+            options.processRule = 'default_emit'
+        } 
+
+        // 默认使用default_emit上报
+        if (!options.reportRule) {
+            options.reportRule = 'default_emit'
+        }
+
+        console.log('emitCollectingTrackData', data, options)   
+
+        // 验证数据         
+        if(!validateData(options.validateRule, data, options)) {
+        	return false
+        }
        
-        // 处理数据          
-        data = ATM_CONFIG.PROCESS_TYPE_MAPPING[options.processType] && ATM_CONFIG.PROCESS_TYPE_MAPPING[options.processType](data, options)
         
-        // 上报数据           
-        ATM_CONFIG.REPORT_TYPE_MAPPING[options.reportType] && ATM_CONFIG.REPORT_TYPE_MAPPING[options.reportType](data, options)
-        
+
+        // 上报数据
+        // 如果有多个 reportRule
+        // 约定使用reportRule作为processRule
+	 
+        if(typeof options.reportRule === 'string') {
+        	// 处理单条数据          
+	        // 若返回 false 表示数据处理失败
+	        data = processData(options.processRule, data, options)
+	        if(data) {
+	        	reportData(options.reportRule, data, options)  
+	        }		 
+		} else if (Object.prototype.toString.call(options.reportRule) === '[object Array]') {
+			options.reportRule.forEach(function(rule) {
+
+				// 处理数据          
+		        // 若返回 false 表示数据处理失败
+		        let _processedData = processData(options.processRule, data, options)		      
+		        if(_processedData) {
+		        	reportData(rule, _processedData, options)  
+		        }
+				
+			})
+		}                      
     }
 
 
@@ -291,7 +374,11 @@
 	// -----------------------------------------------
 
 	// 暴露全局 ATM
+	// 如果已存在 ATM ， 为了避免覆盖原有业务中ATM，禁用该插件
 	// this.ATM = ATM; babel 转换默认使用 use strict ， 立即执行函数中 this 指向 undefind
-	window.ATM = ATM 
+	if(window.ATM) {
+		console.warn("ATM Fatal Error: window.ATM already exists, Please check")
+	}
+	window.ATM = window.ATM || ATM
 
 })();

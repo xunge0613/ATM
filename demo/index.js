@@ -17,3 +17,7 @@ ATM.autoCollectTrackData({
 	element: '.js-test-class'
 })
 
+// auto collect target data  TBD
+// 当页面加载时，获取某hidden input的值或者某全局变量的值 
+
+// emit collecting example 

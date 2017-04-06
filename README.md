@@ -1,7 +1,5 @@
-文档先行吧
 github地址： https://github.com/xunge0613/ATM
-
-demo: https://xuxun.me/lab/2017/ATM/demo/index.html
+demo： https://xuxun.me/lab/2017/ATM/demo/index.html
 
 ---
 
@@ -76,9 +74,9 @@ demo: https://xuxun.me/lab/2017/ATM/demo/index.html
 | page  |   String |  *true*  |   触发事件的页面url,大小写不敏感，*表示全部页面   | 
 | element   |   String |  *true*  |   触发事件的元素   | 
 | value |   Number |  false  |   默认为 1，触发事件统计计数   | 
-| validateRule  |   String  |  *true*  |   数据校验规则   | 
-| processRule   |   String |  *true*  |   数据处理规则   | 
-| reportRule    |   String/Array |  *true*  |   数据上报规则，类型为Array时，可以一次上报多个统计平台   | 
+| validateRule  |   String  |  false    |   默认为 'default_auto', 数据校验规则   | 
+| processRule   |   String |  false    |   默认为 'default_auto', 数据处理规则   | 
+| reportRule    |   String/Array |  false    |   默认为 'default_auto', 数据上报规则，类型为Array时，可以一次上报多个统计平台   | 
 
 注: 此处options 不可为空对象 {}，需要根据options的参数进行埋点事件绑定
 
@@ -95,9 +93,9 @@ let options = {
     trigger: 'click', // 触发事件名   
     page: '*', // 触发事件的页面url,大小写不敏感，*表示全部页面
     element: '#section-flow', // 触发事件的元素   
-    // validateRule: '', // 可空，校验数据方式，默认piwik
-    // processRule: '', // 可空，数据处理方式，默认piwik
-    // reportRule: '', // 可空，上报方式，默认piwik    
+    // validateRule: '', // 可空，校验数据方式，默认为 'default_auto', 
+    // processRule: '', // 可空，数据处理方式，默认为 'default_auto', 
+    // reportRule: '', // 可空，上报方式，默认为 'default_auto',    
 }
 
 
@@ -132,14 +130,12 @@ window.onLoad(function() {
 
 ``` javascript
 // 约定
+// 如果在业务代码中主动调用此方法，参数可任意填写，只要符合最终上报规则即可
 let data = {}
-let options = {
-    trigger: 'click', // 触发事件名   
-    page: '*', // 触发事件的页面url,大小写不敏感，*表示全部页面
-    element: '#section-flow', // 触发事件的元素   
-    // validateRule: '', // 可空，校验数据方式，默认piwik
-    // processRule: '', // 可空，数据处理方式，默认piwik
-    // reportRule: '', // 可空，上报方式，默认piwik    
+let options = { 
+    // validateRule: '', // 可空，校验数据方式，默认为 'default_emit', 
+    // processRule: '', // 可空，数据处理方式，默认为 'default_emit', 
+    // reportRule: '', // 可空，上报方式，默认为 'default_emit',     
 }
 
 // 主动收集
@@ -158,7 +154,7 @@ ATM 全局配置，（默认支持piwik、 baidu、 google，其余自定义需�
 - CONFIG_PROCESS_RULES 数据处理规则
 - CONFIG_REPORT_RULES 数据上报规则
 
-**重要： **
+**重要**
 -  三种规则如果偷懒可以不填，使用**约定**的默认规则进行校验，处理和上报
 -  **但是，如果指定了规则，必须要匹配成功，否则会导致本次上报流程失败。**
 
@@ -324,6 +320,9 @@ ATM.setOptions(options)
 
 无需jQuery依赖
 
+# Change Log
+v 0.0.1 文档 + 基础功能
+
 # 参考
 
 GA 事件追踪 https://support.google.com/analytics/answer/1033068#Anatomy 
@@ -333,14 +332,21 @@ piwik 事件追踪 https://piwik.org/docs/event-tracking/
 # To Be Done
 
 ## 代码层面
-1.  当页面加载时，获取某hidden input的值或者某全局变量的值 
-2.  加入AMD模块化规范
-3.  配置文件补全 google, baidu, piwik 统计
-4.  自动埋点可配置后台开发 
+-  API 参数结构调整优化 v0.0.2 
+-  重写规则匹配逻辑，原先由配置文件mapping改为实例化tracker对象 v0.0.2 
+-  options.page 改用正则匹配 v0.0.2
+-  当页面加载时，获取特定值（某hidden input的值或者某全局变量的值） 进行上报
+-  加入AMD模块化规范
+-  配置文件补全 google, baidu, piwik 统计
+-  自动埋点可配置后台开发 
+-  兼容到IE8
 
 ## 文档层面
-1.  文档翻译成英文
-2.  加入线上demo 
+-  文档翻译成英文
+-  加入线上demo 
 
 # 鸣谢
 > Inspired By & Special Thanks for https://mp.weixin.qq.com/debug/wxadoc/analysis/custom/
+
+Thanks [@Anobaka](https://github.com/anobaka) for advices
+

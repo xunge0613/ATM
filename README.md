@@ -26,31 +26,50 @@ demo： https://xuxun.me/lab/2017/ATM/demo/index.html
 - ATM才刚起步，性能上，设计上可能存在各种神奇的缺陷…… 
 
 ## 愿景
-- 对于简单UI交互的埋点，全局只需要一套独立的代码即可，避免埋点代码与业务代码的耦合
-- 数据收集、处理、上报都交给ATM和配置文件
-- 对于相同埋点事件，使用多套上报工具，只需配置一次即可
-- 对于'不足之处1'，由于约定的存在，只需要在业务代码中编写收集数据的代码，数据处理和上报都交给ATM封装
+- 对于简单UI交互的埋点，全局只需要一套独立的代码即可，避免埋点代码与业务代码的耦合  [ Done ]
+- 数据收集、处理、上报都交给ATM和配置文件 [ Done ]
+- 对于相同埋点事件，使用多套上报工具，只需配置一次即可 [ Done ]
+- 对于'不足之处1'，只需要在业务代码中编写收集数据的代码，数据处理和上报都交给ATM封装 [ Done ]
 - 后期愿景是能做到像小程序数据统计自定义分析管理界面那样，无代码，简单填写几个参数，自动生成ATM统计代码
 - 再往后期，愿景是不仅一个埋点工具，而是广义上的数据自动采集工具…… 大概？Perhaps, maybe……
 
-# 开始使用ATM
+# Get Started
 
 
-## 项目依赖
+## Dependency / 项目依赖
 
-```vbscript-html
+```html
 <script type="text/javascript" src="/path/to/ATM.babel.min.js" ></script>
 ```
  
 
-## 项目使用
+## Usage / 项目使用
 - 全局变量 引用ATM 
 - AMD requirejs 引用 （TBD 准备中……）
 - ES6 @import 引用  （TBD 准备中……）
 
 **强烈建议全局单独维护一份 ATM 埋点代码，实现业务与埋点代码解耦**
-```vbscript-html
-<script type="text/javascript" src="/path/to/auto-track-module.js"></script>
+ 
+## Quick Start
+``` html
+<html>
+	<div class="js-test-atm">Test</div>
+	<script type="text/javascript" src="/path/to/ATM.babel.min.js" ></script>
+	<script type="text/javascript" src="/path/to/auto-track-module.js"></script> 
+</html>
+```
+
+
+``` javascript
+// /path/to/auto-track-module.js
+
+// if you want to simply auto-collect track data using preset tracker tool
+window.onload(function() {
+	ATM.autoCollectTrackData('click', '.*', '.js-test-atm')
+})
+
+
+// that's all
 ```
 
 ## API
@@ -213,8 +232,8 @@ const ATM_CONFIG = {
 | :-: | :-:| :-: | :-: |
 | processRule	|   Function/Array |  true  |   类型为Function，自定义处理规则；类型为Array，使用默认处理规则   | 
 | processRule[].mergeDataName	|   String |  *true*  |   被赋值的data字段名   | 
-| processRule[].mergeOptionName	|   String |  false* |   提供赋值的option属性名   | 
-| processRule[].mergeOptionValue	|   String |  false* |   提供赋值的option属性值   | 
+| processRule[].mergeOptionName	|   String |  false |   提供赋值的option属性名   | 
+| processRule[].mergeOptionValue	|   String |  false |   提供赋值的option属性值   | 
 
 ##### 约定 
 - processRule[].mergeOptionName 与 processRule[].mergeOptionValue 两者之间必须有一个非空，优选使用 mergeOptionName 进行赋值
@@ -322,6 +341,11 @@ ATM.setOptions(options)
 
 # Change Log
 v 0.0.1 文档 + 基础功能  + demo 
+v 0.0.4 
+-  API 参数结构调整优化，前置必填参数，合并可选参数  v0.0.4  [@Anobaka](https://github.com/anobaka)'s advice
+-  重写规则匹配逻辑，原先由配置文件mapping改为实例化tracker对象，规则合为一条 v0.0.4  [@Anobaka](https://github.com/anobaka)'s advice
+-  options.page 改用正则匹配 v0.0.4  [@Anobaka](https://github.com/anobaka)'s advice
+
 
 # 参考
 
@@ -332,15 +356,14 @@ piwik 事件追踪 https://piwik.org/docs/event-tracking/
 # To Be Done
 
 ## 代码层面
--  API 参数结构调整优化，前置必填参数，合并可选参数  v0.0.4  [@Anobaka](https://github.com/anobaka)'s advice
--  重写规则匹配逻辑，原先由配置文件mapping改为实例化tracker对象，规则合为一条 v0.0.4  [@Anobaka](https://github.com/anobaka)'s advice
--  options.page 改用正则匹配 v0.0.4  [@Anobaka](https://github.com/anobaka)'s advice
+
+-  将 trackerName, options.xxxRules 抽象成一个类，实现 new ATM([new TrackerA(), new TrackerB()]) v0.1.1
 -  使用自定义事件代替主动触发 emitCollectingTrackData(data, options) 进一步解耦主动上报逻辑 v0.1.0
 -  当页面加载时，获取特定值（某hidden input的值或者某全局变量的值） 进行上报
 -  加入AMD模块化规范 v0.0.6
 -  配置文件补全 google, baidu, piwik 统计 v0.0.6
 -  自动埋点可配置后台开发 v1.0.0
--  兼容到IE8 v?.?.?
+-  另外增加一个jQuery版本ATM， 解决兼容性问题 v?.?.?
 
 ## 文档层面
 -  文档翻译成英文

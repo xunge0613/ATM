@@ -1,4 +1,5 @@
 github地址： https://github.com/xunge0613/ATM
+
 demo： https://xuxun.me/lab/2017/ATM/demo/index.html
 
 ---
@@ -26,10 +27,11 @@ demo： https://xuxun.me/lab/2017/ATM/demo/index.html
 
 ## 愿景
 - 对于简单UI交互的埋点，全局只需要一套独立的代码即可，避免埋点代码与业务代码的耦合
-- 愿景是数据收集、处理、上报都交给ATM和配置文件
+- 数据收集、处理、上报都交给ATM和配置文件
 - 对于相同埋点事件，使用多套上报工具，只需配置一次即可
 - 对于'不足之处1'，由于约定的存在，只需要在业务代码中编写收集数据的代码，数据处理和上报都交给ATM封装
 - 后期愿景是能做到像小程序数据统计自定义分析管理界面那样，无代码，简单填写几个参数，自动生成ATM统计代码
+- 再往后期，愿景是不仅一个埋点工具，而是广义上的数据自动采集工具…… 大概？Perhaps, maybe……
 
 # 开始使用ATM
 
@@ -53,36 +55,34 @@ demo： https://xuxun.me/lab/2017/ATM/demo/index.html
 
 ## API
 
-#### ATM.autoCollectTrackData(data, options)
+#### ATM.autoCollectTrackData(trigger, page, element, options)
  自动收集埋点数据
 
-##### data 参数说明
-| Name      |     Type |   Required   |   Description   |
+##### 必填参数说明
+| Name		|     Type |   Required   |   Description   |
 | :-: | :-:| :-: | :-: |
-| trigger   |   String |  false  |   默认为 options.trigger， 触发事件的描述   | 
-| page  |   String |  false  |   默认为 options.page， 触发事件的页面描述   | 
-| element   |   String |  false  |   默认为 options.element，触发事件的元素描述   | 
-| value |   Number |  false  |   默认为1，触发事件统计计数   | 
+| trigger	|   String |  *true*  |   触发事件名   | 
+| page	|   String |  *true*  |   触发事件的页面url,大小写不敏感，*表示全部页面   | 
+| element	|   String |  *true*  |   触发事件的元素   | 
 
-注:   此处data 可为空对象 {}，主要用于描述埋点事件说明
 
 
 ##### options 参数说明
-| Name      |     Type |   Required   |   Description   |
+| Name		|     Type |   Required   |   Description   |
 | :-: | :-:| :-: | :-: |
-| trigger   |   String |  *true*  |   触发事件名   | 
-| page  |   String |  *true*  |   触发事件的页面url,大小写不敏感，*表示全部页面   | 
-| element   |   String |  *true*  |   触发事件的元素   | 
-| value |   Number |  false  |   默认为 1，触发事件统计计数   | 
-| validateRule  |   String  |  false    |   默认为 'default_auto', 数据校验规则   | 
-| processRule   |   String |  false    |   默认为 'default_auto', 数据处理规则   | 
-| reportRule    |   String/Array |  false    |   默认为 'default_auto', 数据上报规则，类型为Array时，可以一次上报多个统计平台   | 
+| desc|   Object|  false  |   统计事件描述信息   | 
+| desc.trigger	|   String |  false  |   默认为 trigger， 触发事件的描述   | 
+| desc.page	|   String |  false  |   默认为 page， 触发事件的页面描述   | 
+| desc.element	|   String |  false  |   默认为 element，触发事件的元素描述   | 
+| desc.value	|   Number |  false  |   默认为1，触发事件统计学价值   | 
+| trackerName |   String/Array |  false  |   统计工具,类型为Array时，可以一次上报多个统计平台   | 
+| validateRule	|   String  |  false    |   默认为 'default_auto', 数据校验规则   | 
+| processRule	|   String |  false    |   默认为 'default_auto', 数据处理规则   | 
+| reportRule	|   String/Array |  false    |   默认为 'default_auto', 数据上报规则，   | 
 
-注: 此处options 不可为空对象 {}，需要根据options的参数进行埋点事件绑定
 
 ##### 约定
 -  以**GA**为例，page 对应 category；trigger 对应 action ；element 对应 label ； value 对应 value
-- **重要约定:** `如果存在多条reportRule，默认使用同名的reportRule作为processRule` 
 
 ##### 示例代码
 
@@ -101,7 +101,7 @@ let options = {
 
 // 自动收集埋点
 window.onLoad(function() {
-    ATM.autoCollectTrackData(data, options);
+	ATM.autoCollectTrackData(data, options);
 })
 
 
@@ -111,14 +111,14 @@ window.onLoad(function() {
 主动收集数据
  对于复杂的交互，无法避免会嵌套一些业务耦合较高的埋点代码，可以使用 ATM.emitCollectingTrackData(data, options) 主动收集数据
 ##### data 参数说明
-| Name      |     Type |   Required   |   Description   |
+| Name		|     Type |   Required   |   Description   |
 | :-: | :-:| :-: | :-: |
-| DIY   |   String |  false  |   DIY   | 
+| DIY	|   String |  false  |   DIY   | 
  
 ##### options 参数说明
-| Name      |     Type |   Required   |   Description   |
+| Name		|     Type |   Required   |   Description   |
 | :-: | :-:| :-: | :-: |
-| DIY   |   String |  false  |   DIY   | 
+| DIY	|   String |  false  |   DIY   | 
 
 
 注: 此处data, options 的参数由配置文件**约定**
@@ -140,10 +140,10 @@ let options = {
 
 // 主动收集
 fetch("https://www.example.com/api")
-    .then(data => {
-        ATM.emitCollectingTrackData(data, options)
-    })
-    .catch(err => console.error(err))
+	.then(data => {
+		ATM.emitCollectingTrackData(data, options)
+	})
+	.catch(err => console.error(err))
 ```
 
 ## CONFIG
@@ -168,37 +168,37 @@ ATM 全局配置，（默认支持piwik、 baidu、 google，其余自定义需�
  -  对于Function类型规则，使用该自定义验证函数进行验证
 
 ##### 配置说明
-| Name      |     Type |   Required   |   Description   |
+| Name		|     Type |   Required   |   Description   |
 | :-: | :-:| :-: | :-: |
-| validateRule  |   Function/Object |  true  |   类型为Function，自定义验证规则；类型为Object，使用默认验证规则   | 
+| validateRule	|   Function/Object |  true  |   类型为Function，自定义验证规则；类型为Object，使用默认验证规则   | 
 ##### 代码示例
 ```javascript
 const ATM_CONFIG = {
-        /*
+		/*
             数据校验规则         
         */
-        'VALIDATE_RULES': {
-            'piwik_emit': function(data,options) {
-                return true
-            },          
+		'VALIDATE_RULES': {
+			'piwik_emit': function(data,options) {
+				return true
+			},			
             'piwik_auto': {
-                requiredData: [], 
-                requiredOptions: ['trigger','page', 'element']
+            	requiredData: [], 
+            	requiredOptions: ['trigger','page', 'element']
             },
             'google_auto': {
-                requiredData: [], 
-                requiredOptions: ['trigger','page', 'element']
+            	requiredData: [], 
+            	requiredOptions: ['trigger','page', 'element']
             },
             'baidu_auto': {
-                requiredData: [], 
-                requiredOptions: ['trigger','page', 'element']
+            	requiredData: [], 
+            	requiredOptions: ['trigger','page', 'element']
             },
             'default': {
-                requiredData: [], 
-                requiredOptions: []
+            	requiredData: [], 
+            	requiredOptions: []
             },
         },
-    }
+	}
 }
 ```
 #### ATM_CONFIG.PROCESS_RULES
@@ -209,12 +209,12 @@ const ATM_CONFIG = {
  -  对于 Array 类型规则，使用默认处理方式，**默认约定只允许从 option 赋值到 data **
  -  对于 Function 类型规则，使用该自定义验证函数进行处理
 ##### 配置说明
-| Name      |     Type |   Required   |   Description   |
+| Name		|     Type |   Required   |   Description   |
 | :-: | :-:| :-: | :-: |
-| processRule   |   Function/Array |  true  |   类型为Function，自定义处理规则；类型为Array，使用默认处理规则   | 
-| processRule[].mergeDataName   |   String |  *true*  |   被赋值的data字段名   | 
-| processRule[].mergeOptionName |   String |  false* |   提供赋值的option属性名   | 
-| processRule[].mergeOptionValue    |   String |  false* |   提供赋值的option属性值   | 
+| processRule	|   Function/Array |  true  |   类型为Function，自定义处理规则；类型为Array，使用默认处理规则   | 
+| processRule[].mergeDataName	|   String |  *true*  |   被赋值的data字段名   | 
+| processRule[].mergeOptionName	|   String |  false* |   提供赋值的option属性名   | 
+| processRule[].mergeOptionValue	|   String |  false* |   提供赋值的option属性值   | 
 
 ##### 约定 
 - processRule[].mergeOptionName 与 processRule[].mergeOptionValue 两者之间必须有一个非空，优选使用 mergeOptionName 进行赋值
@@ -225,33 +225,33 @@ const ATM_CONFIG = {
 ##### 代码示例
 ```javascript
 const ATM_CONFIG = {
-        /*
+		/*
             数据处理规则         
         */
-        'PROCESS_RULES': {
-            'piwik_emit': function(data,options) {
-                return true
-            },          
+		'PROCESS_RULES': {
+			'piwik_emit': function(data,options) {
+				return true
+			},			
             'piwik_auto': [
-               {
-                   mergeDataName: 'category',
-                   mergeOptionName: 'page'
-               },       
-               {
-                   mergeDataName: 'action',
-                   mergeOptionName: 'trigger'
-               },       
-               {
-                   mergeDataName: 'name',
-                   mergeOptionName: 'element'
-               },       
-               {
-                   mergeDataName: 'value',
-                   mergeOptionValue: 1
-               },       
-            ],           
+	           {
+		           mergeDataName: 'category',
+		           mergeOptionName: 'page'
+	           },		
+   	           {
+		           mergeDataName: 'action',
+		           mergeOptionName: 'trigger'
+	           },		
+   	           {
+		           mergeDataName: 'name',
+		           mergeOptionName: 'element'
+	           },		
+   	           {
+		           mergeDataName: 'value',
+		           mergeOptionValue: 1
+	           },		
+			],           
         },
-    }
+	}
 }
 ```
 #### ATM_CONFIG.REPORT_RULES
@@ -261,21 +261,21 @@ const ATM_CONFIG = {
 2. 匹配到对应规则后，使用规则进行上报
 
 ##### 配置说明
-| Name      |     Type |   Required   |   Description   |
+| Name		|     Type |   Required   |   Description   |
 | :-: | :-:| :-: | :-: |
-| reportRule    |   Function |  true  |   类型为Function，上报规则，默认参数 data,options | 
+| reportRule	|   Function |  true  |   类型为Function，上报规则，默认参数 data,options | 
 
 
 
 ##### 代码示例
 ```javascript
 const ATM_CONFIG = {
-        /*
+		/*
             数据上报规则         
         */
-        'REPORT_RULES': {           
+		'REPORT_RULES': {			
             'piwik_auto': function(data, options) {
-                console.log("report piwik",data)
+	            console.log("report piwik",data)
                  //Piwik延时执行
                 let piwikTT = setInterval(function () {
                     if (!(typeof Piwik === 'undefined')) {
@@ -297,12 +297,12 @@ const ATM_CONFIG = {
                     }
                 }, 200);
                 return ;
-            },
+			},
             'default': function(data, options) {
-                return 
+	            return 
             },
         },
-    }
+	}
 }
 ```
 
@@ -321,7 +321,7 @@ ATM.setOptions(options)
 无需jQuery依赖
 
 # Change Log
-v 0.0.1 文档 + 基础功能
+v 0.0.1 文档 + 基础功能  + demo 
 
 # 参考
 
@@ -332,14 +332,15 @@ piwik 事件追踪 https://piwik.org/docs/event-tracking/
 # To Be Done
 
 ## 代码层面
--  API 参数结构调整优化 v0.0.2 
--  重写规则匹配逻辑，原先由配置文件mapping改为实例化tracker对象 v0.0.2 
--  options.page 改用正则匹配 v0.0.2
+-  API 参数结构调整优化，前置必填参数，合并可选参数  v0.0.4  [@Anobaka](https://github.com/anobaka)'s advice
+-  重写规则匹配逻辑，原先由配置文件mapping改为实例化tracker对象，规则合为一条 v0.0.4  [@Anobaka](https://github.com/anobaka)'s advice
+-  options.page 改用正则匹配 v0.0.4  [@Anobaka](https://github.com/anobaka)'s advice
+-  使用自定义事件代替主动触发 emitCollectingTrackData(data, options) 进一步解耦主动上报逻辑 v0.1.0
 -  当页面加载时，获取特定值（某hidden input的值或者某全局变量的值） 进行上报
--  加入AMD模块化规范
--  配置文件补全 google, baidu, piwik 统计
--  自动埋点可配置后台开发 
--  兼容到IE8
+-  加入AMD模块化规范 v0.0.6
+-  配置文件补全 google, baidu, piwik 统计 v0.0.6
+-  自动埋点可配置后台开发 v1.0.0
+-  兼容到IE8 v?.?.?
 
 ## 文档层面
 -  文档翻译成英文

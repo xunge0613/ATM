@@ -1,12 +1,3 @@
-#统计埋点代码小研究（中）
-
-@[ATM, github, 文档, 统计代码]
-
-在上一篇记录中，简要分析了一下实现的思路
-当然也结合自己工作项目写了一个小demo
-为了提高代码的适应性，有必要单独写一个较低依赖的小模块
-
-文档先行吧
 github地址： https://github.com/xunge0613/ATM
 
 demo： https://xuxun.me/lab/2017/ATM/demo/index.html

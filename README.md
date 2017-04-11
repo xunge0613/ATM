@@ -1,3 +1,12 @@
+#统计埋点代码小研究（中）
+
+@[ATM, github, 文档, 统计代码]
+
+在上一篇记录中，简要分析了一下实现的思路
+当然也结合自己工作项目写了一个小demo
+为了提高代码的适应性，有必要单独写一个较低依赖的小模块
+
+文档先行吧
 github地址： https://github.com/xunge0613/ATM
 
 demo： https://xuxun.me/lab/2017/ATM/demo/index.html
@@ -26,7 +35,7 @@ demo： https://xuxun.me/lab/2017/ATM/demo/index.html
 - ATM才刚起步，性能上，设计上可能存在各种神奇的缺陷…… 
 
 ## 愿景
-- 对于简单UI交互的埋点，全局只需要一套独立的代码即可，避免埋点代码与业务代码的耦合  [ Done ]
+- [x] 对于简单UI交互的埋点，全局只需要一套独立的代码即可，避免埋点代码与业务代码的耦合  [ Done ]
 - 数据收集、处理、上报都交给ATM和配置文件 [ Done ]
 - 对于相同埋点事件，使用多套上报工具，只需配置一次即可 [ Done ]
 - 对于'不足之处1'，只需要在业务代码中编写收集数据的代码，数据处理和上报都交给ATM封装 [ Done ]
@@ -195,26 +204,22 @@ ATM 全局配置，（默认支持piwik、 baidu、 google，其余自定义需�
 const ATM_CONFIG = {
 		/*
             数据校验规则         
-        */
+        */	
 		'VALIDATE_RULES': {
 			'piwik_emit': function(data,options) {
 				return true
-			},			
-            'piwik_auto': {
-            	requiredData: [], 
-            	requiredOptions: ['trigger','page', 'element']
-            },
-            'google_auto': {
-            	requiredData: [], 
-            	requiredOptions: ['trigger','page', 'element']
-            },
-            'baidu_auto': {
-            	requiredData: [], 
-            	requiredOptions: ['trigger','page', 'element']
-            },
-            'default': {
+			},
+			'test': {
+				requiredData: ['test'], 
+            	requiredOptions: []
+			},		
+			'default_auto': {
             	requiredData: [], 
             	requiredOptions: []
+            },
+            'default_emit': {
+            	requiredData: [], 
+            	requiredOptions: ['trigger']
             },
         },
 	}
@@ -249,27 +254,31 @@ const ATM_CONFIG = {
         */
 		'PROCESS_RULES': {
 			'piwik_emit': function(data,options) {
-				return true
-			},			
-            'piwik_auto': [
-	           {
-		           mergeDataName: 'category',
-		           mergeOptionName: 'page'
-	           },		
-   	           {
-		           mergeDataName: 'action',
-		           mergeOptionName: 'trigger'
-	           },		
-   	           {
-		           mergeDataName: 'name',
-		           mergeOptionName: 'element'
-	           },		
-   	           {
-		           mergeDataName: 'value',
-		           mergeOptionValue: 1
-	           },		
-			],           
-        },
+				return data
+			},
+			'piwik_auto': [
+				{
+					mergeDataName: 'category',
+					mergeOptionName: 'page'
+				},
+				{
+					mergeDataName: 'action',
+					mergeOptionName: 'trigger'
+				},
+				{
+					mergeDataName: 'name',
+					mergeOptionName: 'element'
+				},
+				{
+					mergeDataName: 'value',
+					mergeOptionValue: 1
+				},								
+			],
+			'default_auto': function(data,options) {
+				return data
+			},
+			'default_emit': [],
+		},
 	}
 }
 ```
@@ -293,18 +302,22 @@ const ATM_CONFIG = {
             数据上报规则         
         */
 		'REPORT_RULES': {			
-            'piwik_auto': function(data, options) {
-	            console.log("report piwik",data)
+            'default_emit': function(data, options) { 
+	            console.log("ATM report default_emit",data)                 
+                return ;
+			},
+            'default_auto': function(data, options) { 
+	            console.log("ATM report default_auto",data)
                  //Piwik延时执行
                 let piwikTT = setInterval(function () {
                     if (!(typeof Piwik === 'undefined')) {
                         try {
                             let atmTracker = Piwik.getTracker();
                             if (data.value) {
-                                atmTracker.trackEvent(data.category, data.action, data.name, data.value);
+                                atmTracker.trackEvent(data.page, data.trigger, data.element, data.value);
                             }
                             else {
-                                atmTracker.trackEvent(data.category, data.action, data.name);
+                                atmTracker.trackEvent(data.page, data.trigger, data.element);
                             }
                         }
                         catch (error) {
@@ -317,10 +330,7 @@ const ATM_CONFIG = {
                 }, 200);
                 return ;
 			},
-            'default': function(data, options) {
-	            return 
-            },
-        },
+        }, 
 	}
 }
 ```
@@ -335,17 +345,19 @@ ATM.setOptions(options)
 ``` 
 
 ## 兼容性
-目测IE9+ 
+IE9+ 
 
 无需jQuery依赖
 
 # Change Log
-v 0.0.1 文档 + 基础功能  + demo 
-v 0.0.4 
+
+v 0.0.4 重写规则匹配逻辑
 -  API 参数结构调整优化，前置必填参数，合并可选参数  v0.0.4  [@Anobaka](https://github.com/anobaka)'s advice
 -  重写规则匹配逻辑，原先由配置文件mapping改为实例化tracker对象，规则合为一条 v0.0.4  [@Anobaka](https://github.com/anobaka)'s advice
 -  options.page 改用正则匹配 v0.0.4  [@Anobaka](https://github.com/anobaka)'s advice
+-  加入线上demo 
 
+v 0.0.1 文档 + 基础功能  + demo 
 
 # 参考
 
@@ -355,22 +367,27 @@ piwik 事件追踪 https://piwik.org/docs/event-tracking/
 
 # To Be Done
 
-## 代码层面
+## Requirements Aspect / 需求层面
+-  当页面加载时，获取特定值（某hidden input的值或者某全局变量的值） 进行上报 v0.1.1
+- 自动埋点可配置后台开发 v1.0.0
 
--  将 trackerName, options.xxxRules 抽象成一个类，实现 new ATM([new TrackerA(), new TrackerB()]) v0.1.1
+## Code Aspect / 代码层面
+-  方案A：底层重写，存在多个tracker时，改用 new Tracker() ， 不再使用 trackerName + 'options' 这类不友好的约定；
+   即： 将 trackerName, options.xxxRules 抽象成一个类，实现 new ATMTrackerFactory([new TrackerA(), new TrackerB()]) v0.0.5
+- 方案B： API接口调整，trackerName 与 options.xxxRule 同级， 只保留一个参数，类型为对象or数组 v0.0.5
 -  使用自定义事件代替主动触发 emitCollectingTrackData(data, options) 进一步解耦主动上报逻辑 v0.1.0
--  当页面加载时，获取特定值（某hidden input的值或者某全局变量的值） 进行上报
 -  加入AMD模块化规范 v0.0.6
--  配置文件补全 google, baidu, piwik 统计 v0.0.6
--  自动埋点可配置后台开发 v1.0.0
+-  配置文件补全 google, baidu, piwik 统计 v0.0.6  
 -  另外增加一个jQuery版本ATM， 解决兼容性问题 v?.?.?
 
-## 文档层面
--  文档翻译成英文
--  加入线上demo 
+## Documentation Aspect / 文档层面 
+-  文档翻译成英文  
 
-# 鸣谢
+# Thanks / 鸣谢
 > Inspired By & Special Thanks for https://mp.weixin.qq.com/debug/wxadoc/analysis/custom/
 
 Thanks [@Anobaka](https://github.com/anobaka) for advices
 
+
+# Lisence 
+MIT

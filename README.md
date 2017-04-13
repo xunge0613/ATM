@@ -27,11 +27,12 @@ demo： https://xuxun.me/lab/2017/ATM/demo/index.html
 
 ## 愿景
 - [x] 对于简单UI交互的埋点，全局只需要一套独立的代码即可，避免埋点代码与业务代码的耦合  [ Done ]
-- 数据收集、处理、上报都交给ATM和配置文件 [ Done ]
-- 对于相同埋点事件，使用多套上报工具，只需配置一次即可 [ Done ]
-- 对于'不足之处1'，只需要在业务代码中编写收集数据的代码，数据处理和上报都交给ATM封装 [ Done ]
-- 后期愿景是能做到像小程序数据统计自定义分析管理界面那样，无代码，简单填写几个参数，自动生成ATM统计代码
-- 再往后期，愿景是不仅一个埋点工具，而是广义上的数据自动采集工具…… 大概？Perhaps, maybe……
+- [x] 埋点数据收集、处理、上报都交给ATM和配置文件 [ Done ]
+- [x] 对于相同埋点事件，使用多套上报工具，只需配置一次即可 [ Done ]
+- [x] 对于'不足之处1'，只需要在业务代码中编写**收集数据**的代码，数据处理和上报都交给ATM封装 [ Done ]
+- [ ] 对于上一点，进一步优化，在业务代码中，只触发约定好的自定义事件，包括数据收集都交给埋点代码和ATM进行事件响应
+- [ ] 后期愿景是能做到像小程序数据统计自定义分析管理界面那样，无代码，简单填写几个参数，自动生成ATM统计代码
+- [ ] 再往后期，愿景是不仅一个埋点工具，而是广义上的数据自动采集工具…… 大概？Perhaps, maybe……
 
 # Get Started
 
@@ -94,6 +95,7 @@ window.onload(function() {
 | desc.page	|   String |  false  |   默认为 page， 触发事件的页面描述   | 
 | desc.element	|   String |  false  |   默认为 element，触发事件的元素描述   | 
 | desc.value	|   Number |  false  |   默认为1，触发事件统计学价值   | 
+| tracker |   Object / Array |  false  |   构造统计工具参数,类型为Array时，可以一次上报多个统计平台   | 
 | trackerName |   String/Array |  false  |   统计工具,类型为Array时，可以一次上报多个统计平台   | 
 | validateRule	|   String  |  false    |   默认为 'default_auto', 数据校验规则   | 
 | processRule	|   String |  false    |   默认为 'default_auto', 数据处理规则   | 
@@ -326,13 +328,21 @@ const ATM_CONFIG = {
 }
 ```
 
-#### ATM.setOptions(options)  （TBD 准备中……）
-设置全局options
+#### ATM.createTracker(options)  
+创建统计工具
+##### options 参数说明
+| Name		|     Type |   Required   |   Description   |
+| :-: | :-:| :-: | :-: |
+| trackerName|   String  |  *true*	|  统计工具名   | 
+| validateRule	|   String  |  false    |   默认为 'default_auto', 数据校验规则   | 
+| processRule	|   String |  false    |   默认为 'default_auto', 数据处理规则   | 
+| reportRule	|   String/Array |  false    |   默认为 'default_auto', 数据上报规则，   | 
+
 
 ##### 示例代码
 
 ``` javascript
-ATM.setOptions(options)
+ ATM.createTracker(options)  
 ``` 
 
 ## 兼容性
@@ -359,20 +369,28 @@ piwik 事件追踪 https://piwik.org/docs/event-tracking/
 # To Be Done
 
 ## Requirements Aspect / 需求层面
--  当页面加载时，获取特定值（某hidden input的值或者某全局变量的值） 进行上报 v0.1.1
+- 当页面加载时，获取特定值（某hidden input的值或者某全局变量的值） 进行上报 v0.1.1
 - 自动埋点可配置后台开发 v1.0.0
+- 自动埋点功能，增加监听数据变化，当数据变化时，自动上报 v0.1.2 
 
 ## Code Aspect / 代码层面
+-  简化约定，对于自定义规则，rule 必须为 function 类型 v0.0.5 
 -  方案A：底层重写，存在多个tracker时，改用 new Tracker() ， 不再使用 trackerName + 'options' 这类不友好的约定；
    即： 将 trackerName, options.xxxRules 抽象成一个类，实现 new ATMTrackerFactory([new TrackerA(), new TrackerB()]) v0.0.5
 - 方案B： API接口调整，trackerName 与 options.xxxRule 同级， 只保留一个参数，类型为对象or数组 v0.0.5
--  使用自定义事件代替主动触发 emitCollectingTrackData(data, options) 进一步解耦主动上报逻辑 v0.1.0
+-  使用自定义事件代替主动触发 emitCollectingTrackData(data, options) 进一步解耦主动上报逻辑 v0.1.0；从而业务代码中也可以半声明式调用 ATM， 而非命令式，后期可以做到可配置化
 -  加入AMD模块化规范 v0.0.6
--  配置文件补全 google, baidu, piwik 统计 v0.0.6  
+-  【废弃】配置文件补全 google, baidu, piwik 统计 v0.0.6  
+-  【上一条 改为】 配置文件只提供最基本default, 在文档中加入google、baidu等示例，可提供外置json配置文件而非核心库，v0.0.7
 -  另外增加一个jQuery版本ATM， 解决兼容性问题 v?.?.?
+-  API 调整， ATM.autoCollectTrackData(new ATMCollector(), [new ATMTracker()])  v0.2.0
 
 ## Documentation Aspect / 文档层面 
 -  文档翻译成英文  
+
+
+# Misc /  杂七杂八
+
 
 # Thanks / 鸣谢
 > Inspired By & Special Thanks for https://mp.weixin.qq.com/debug/wxadoc/analysis/custom/

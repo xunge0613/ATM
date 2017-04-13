@@ -111,16 +111,6 @@
 				validateRule: ATM_CONFIG.VALIDATE_RULES.default_emit,
 				processRule: ATM_CONFIG.PROCESS_RULES.default_emit,
 				reportRule: ATM_CONFIG.REPORT_RULES.default_emit,
-			},
-			'piwik_auto': {
-				validateRule: ATM_CONFIG.VALIDATE_RULES.default_auto,
-				processRule: ATM_CONFIG.PROCESS_RULES.default_auto,
-				reportRule: ATM_CONFIG.REPORT_RULES.default_auto,
-			},
-			'google_auto': {
-				validateRule: ATM_CONFIG.VALIDATE_RULES.default_auto,
-				processRule: ATM_CONFIG.PROCESS_RULES.default_auto,
-				reportRule: ATM_CONFIG.REPORT_RULES.google_auto, // google here
 			}
 		},
 		atmTracker: {
@@ -138,32 +128,14 @@
 				this.validateRule = ATM.presetRules[trackerName].validateRule
 				this.processRule = ATM.presetRules[trackerName].processRule
 				this.reportRule = ATM.presetRules[trackerName].reportRule
-			} else {
+			} else {				
 
-				// 若 ruleName 是 string 则匹配是否存在
-
-
-				// 若 ruleName 是 function 
-
-				// 命名空间
-				// 若预设中不存在，则匹配 options[trackerName + 'options'] 字段是否存在 （用于区分同时多个统计工具）
-				// 若存在，则使用该对象的属性
-				if(options[trackerName + 'options']) {
-					// 分别判断 function or string 
-					(options[trackerName + 'options'].validateRule) && (this.validateRule = options.validateRule ) 
-					(options[trackerName + 'options'].processRule) && (this.processRule = options.processRule )
-					(options[trackerName + 'options'].reportRule) && (this.reportRule = options.reportRule	)	 													
-				} else {
-					// 若都不满足，则取 options.xxxRule
-					this.validateRule = options.validateRule
-					this.processRule = options.processRule
-					this.reportRule = options.reportRule
-				}		
-
-
-			}	
-
-			
+				// 若 rule 有值则赋值 
+                // TBD: 是否之后要去除，只在后续调用时进行验证？				
+    			options.validateRule && this.validateRule = options.validateRule  
+    			options.processRule && this.processRule = options.processRule  
+    			options.reportRule && this.reportRule = options.reportRule 	
+			}				
 		}
 
 		 
